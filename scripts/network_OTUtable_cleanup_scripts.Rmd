@@ -1,0 +1,309 @@
+---
+title: "pre-processing_CH4cycle_networks"
+author: "Rhiannon_Mondav"
+date: "1/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## remove Archaea?
+check coverage on SILVA TestPrime : 
+96% of bacterial sequences and 95% of archaeal sequences with SILVA, EMBL-ENA, RDP 
+or 98% and 99% respectively against GTDP and LTP for the same SSU rRNA gene region. 
+-decision: don't remove
+
+## remove Eukaryota? Chloroplasts?
+Eukaryote coverage is variable between 11% and 17% of available sequences covering 
+the same region. Coverage of chloroplast regions averages over 93% coverage of 
+available sequences. No direct (non-chloroplast) eukaryote sequences were recovered 
+with amplicons. Mitochondrial sequences? none
+-decision: don't remove chloroplast
+
+https://www.arb-silva.de/search/testprime/
+Klindworth, A., Pruesse, E., Schweer, T., Peplies, J., Quast, C., Horn, M. and Glöckner, F.O. 
+(2012) Evaluation of general 16S ribosomal RNA gene PCR primers for classical and 
+next-generation sequencing-based diversity studies. 
+Nucleic Acids Res. 2013 Jan 1;41(1):e1. doi: 10.1093/nar/gks808
+
+## set up git repository
+```{bash}
+cd /proj/snic2020-16-196/nobackup/CHtrophy_network_nobackup/
+interactive -n 1 -t 02:10:00 -A snic2020-5-529
+module load bioinfo-tools git/2.28.0
+git init
+git clone git@github.com:rmondav/methanotrophy_networks.git
+cd methanotrophy_networks/
+#add to ignore file
+nano .gitignore
+# make directories
+mkdir original_tables
+mkdir scripts
+mkdir processed_tables
+mkdir results
+mkdir figures
+## copy over original mothur tables
+scp ../cultALL.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.agc.* ./original_tables/
+## remove write access to tables
+chmod -w original_tables/cultALL.trim*
+## update github
+git status
+git add .gitignore
+git commit -m "update gitignore file"
+git push origin main
+```
+
+
+## remove 'other' samples and convert to biom format
+```{bash}
+cd /proj/snic2020-16-196/nobackup/CHtrophy_network_nobackup/
+interactive -n 1 -t 02:10:00 -A snic2020-5-529
+module load bioinfo-tools Mothur/1.25.1 git/2.28.0
+#preprocessing OTU table with mothur#
+https://mothur.org/wiki/mothur_manual/
+
+## change name of file while keeping original as backup copy
+scp original_tables/cultALL.trim.contigs.good.unique.good.filter.unique.precluster.pick.pick.agc.shared \
+processed_tables/methanotrophy_OTU_table.txt
+chmod +w processed_tables/methanotrophy_OTU_table.txt
+## remove other samples
+mothur  
+remove.groups(shared=processed_tables/methanotrophy_OTU_table.txt, groups=AnaerobicPLUSC-JamtlaPLUSC-k1-k145-k49-k97)
+# convert to biom format
+make.biom(shared=processed_tables/methanotrophy_OTU_table.0.03.pick.txt)
+quit()
+#output methanotrophy_OTU_table.0.03.pick.0.03.biom
+```
+
+## separate sample types, remove failed sequencing samples 
+## and ultra-rare OTUs, then subsample
+```{bash}
+cd /proj/snic2020-16-196/nobackup/CHtrophy_network_nobackup/methanotrophy_networks
+module load bioinfo-tools Qiime/1.9.1 git/2.28.0
+## separate membrane filtrate media control samples
+## remove controls from main dataset
+filter_samples_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table.0.03.pick.0.03.biom \
+-o processed_tables/methanotrophy_OTU_table_wo_others.noNTC.biom \
+--sample_id_fp scripts/samplelists/sample_list.2umfilterable_controls.txt --negate_sample_id_fp
+## collect controls ie filtrate samples
+filter_samples_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table.0.03.pick.0.03.biom \
+-o processed_tables/methanotrophy_OTU_table_filtrate_NTC.biom \
+--sample_id_fp scripts/samplelists/sample_list.2umfilterable_controls.txt 
+
+## make summaries for sample sequence QC
+biom summarize-table \
+-i processed_tables/methanotrophy_OTU_table_filtrate_NTC.biom \
+>processed_tables/summary_NTC.txt
+biom summarize-table \
+-i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.biom \
+>processed_tables/summary_full_woNTC.txt
+
+## remove samples with less than 100 count as failed samples
+filter_samples_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.biom \
+-o processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count.biom \
+--min_count 100
+
+## remove ultra-rare OTUs = zero count and singletons
+filter_otus_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count.biom \
+-o processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count_no_singletons.biom -n 2
+## remove singltns from filtrate samples
+filter_otus_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table_filtrate_NTC.biom \
+-o processed_tables/methanotrophy_OTU_table_filtrate_NTC_no_singletons.biom -n 2 
+
+## separate the four 'treatments' for data cleanup
+grep "Sjon" scripts/samplelists/sample_list.anO2_lake_cultures.txt \
+>scripts/samplelists/sample_list.anO2_lake2_cultures.txt
+grep "Anaerobic" scripts/samplelists/sample_list.anO2_lake_cultures.txt \
+>scripts/samplelists/sample_list.anO2_lake1_cultures.txt
+
+filter_samples_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count_no_singletons.biom \
+-o processed_tables/OTU_table_anO2_lake1_cultures.biom \
+--sample_id_fp scripts/samplelists/sample_list.anO2_lake1_cultures.txt
+filter_samples_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count_no_singletons.biom \
+-o processed_tables/OTU_table_anO2_lake2_cultures.biom \
+--sample_id_fp scripts/samplelists/sample_list.anO2_lake2_cultures.txt
+filter_samples_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count_no_singletons.biom \
+-o processed_tables/OTU_table_anO2_pond_cultures.biom \
+--sample_id_fp scripts/samplelists/sample_list.anO2_pond_cultures.txt
+filter_samples_from_otu_table.py \
+-i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count_no_singletons.biom \
+-o processed_tables/OTU_table_TS_lake.biom \
+--sample_id_fp scripts/samplelists/sample_list.TS_lake_actual.txt
+
+```
+
+## remember to update git
+
+```{bash}
+
+cd /proj/snic2020-16-196/nobackup/CHtrophy_network_nobackup/methanotrophy_networks/processed_tables
+interactive -n 1 -t 02:10:00 -A snic2020-5-529
+module load bioinfo-tools Qiime/1.9.1 git/2.28.0
+
+# summarise
+biom summarize-table -i OTU_table_anO2_lake1_cultures.biom >summary_anO2_lake1_cultures.txt #98
+biom summarize-table -i OTU_table_anO2_lake2_cultures.biom >summary_anO2_lake2_cultures.txt #79
+biom summarize-table -i OTU_table_anO2_pond_cultures.biom >summary_anO2_pond_cultures.txt #98
+biom summarize-table -i OTU_table_TS_lake.biom >summary_TS_lake.txt #35
+
+## subsample 600 counts NTC
+single_rarefaction.py \
+-i methanotrophy_OTU_table_filtrate_NTC.biom -o OTU_table_filtrate_NTC.600.biom --depth 600
+biom summarize-table -i OTU_table_filtrate_NTC.600.biom >summary_NTC.600.txt
+biom summarize-table -i OTU_table_filtrate_NTC.600.biom --qualitative >summary_NTC.600.qual.txt
+filter_otus_from_otu_table.py \
+-i OTU_table_filtrate_NTC.600.biom -o OTU_table_filtrate_NTC.600.no_singletons.biom -n 2
+biom summarize-table -i OTU_table_filtrate_NTC.600.no_singletons.biom >summary_NTC.600.ns.txt
+biom summarize-table -i OTU_table_filtrate_NTC.600.no_singletons.biom --qualitative >summary_NTC.600.ns.qual.txt
+
+## subsample 2000 counts all others
+single_rarefaction.py \
+-i OTU_table_anO2_lake1_cultures.biom -o OTU_table_anO2_lake1_cultures_2000.biom --depth 2000
+biom summarize-table -i OTU_table_anO2_lake1_cultures_2000.biom \
+>summary_anO2_lake1_cultures_2000.txt #93 samples
+single_rarefaction.py \
+-i OTU_table_anO2_lake2_cultures.biom -o OTU_table_anO2_lake2_cultures_2000.biom --depth 2000
+biom summarize-table -i OTU_table_anO2_lake2_cultures_2000.biom \
+>summary_anO2_lake2_cultures_2000.txt #70 samples
+single_rarefaction.py \
+-i OTU_table_anO2_pond_cultures.biom -o OTU_table_anO2_pond_cultures_2000.biom --depth 2000
+biom summarize-table -i OTU_table_anO2_pond_cultures_2000.biom \
+>summary_anO2_pond_cultures_2000.txt #95 samples
+single_rarefaction.py \
+-i OTU_table_TS_lake.biom -o OTU_table_TS_lake_2000.biom --depth 2000
+biom summarize-table -i OTU_table_TS_lake_2000.biom \
+>summary_TS_lake_cultures_2000.txt #35 samples
+
+## for network calculations
+# try out several options to find something that reduces sparcity to 
+around 50% without removing all the richness/diversity
+--min_samples 30% # reduced the cultures too drastically. not good option 
+for cultures as they all had different starting assemblages
+--min_samples 10 # slightly better option and based on the idea that 10 samples 
+could give sufficient co-occurance patterns for strong stats
+--min_count_fraction 0.1 #retains OTUs with >10% r.a. overall, not good, only dominant OTUs
+--min_count_fraction 0.01 #retains OTUs with >1% overal r..a. ok for natural 
+assemblages (lake) but not good option for anO2 cultures
+
+## try combination of >10% of samples  and count (1% one sample + 1x10%) for anO2 cultures
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_lake1_cultures_2000.biom \
+-o OTU_table_anO2_lake1_cultures_2000_min9S.biom --min_samples 9
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_lake1_cultures_2000_min9S.biom \
+-o OTU_table_anO2_lake1_cultures_2000_min9S.ovr28count.biom -n 28
+biom summarize-table \
+-i OTU_table_anO2_lake1_cultures_2000_min9S.ovr28count.biom \
+>summary_anO2_lake1_cultures_2000_min9S.ovr28count.txt
+biom summarize-table \
+-i OTU_table_anO2_lake1_cultures_2000_min9S.ovr28count.biom --qualitative \
+>summary_anO2_lake1_cultures_2000_min9S.ovr28count_qual.txt
+
+# 2nd lake cultures
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_lake2_cultures_2000.biom \
+-o OTU_table_anO2_lake2_cultures_2000_min7S.biom --min_samples 7
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_lake2_cultures_2000_min7S.biom \
+-o OTU_table_anO2_lake2_cultures_2000_min7S.ovr26count.biom -n 26
+biom summarize-table \
+-i OTU_table_anO2_lake2_cultures_2000_min7S.ovr26count.biom \
+>summary_anO2_lake2_cultures_2000_min7S.ovr26count.txt
+biom summarize-table \
+-i OTU_table_anO2_lake2_cultures_2000_min7S.ovr26count.biom --qualitative \
+>summary_anO2_lake2_cultures_2000_min7S.ovr26count_qual.txt
+
+# pond
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_pond_cultures_2000.biom \
+-o OTU_table_anO2_pond_cultures_2000_min10S.biom --min_samples 10
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_pond_cultures_2000_min10S.biom \
+-o OTU_table_anO2_pond_cultures_2000_min10S.ovr29count.biom -n 29
+biom summarize-table \
+-i OTU_table_anO2_pond_cultures_2000_min10S.ovr29count.biom \
+>summary_anO2_pond_cultures_2000_min10S.ovr29count.txt
+biom summarize-table \
+-i OTU_table_anO2_pond_cultures_2000_min10S.ovr29count.biom --qualitative \
+>summary_anO2_pond_cultures_2000_min10S.ovr29count_qual.txt
+
+# and for lake TD-series
+filter_otus_from_otu_table.py \
+-i OTU_table_TS_lake_2000.biom \
+-o OTU_table_TS_lake_2000_min18S.biom --min_samples 18
+filter_otus_from_otu_table.py \
+-i OTU_table_TS_lake_2000_min18S.biom \
+-o OTU_table_TS_lake_2000_min18S.ovr38count.biom -n 38
+biom summarize-table \
+-i OTU_table_TS_lake_2000_min18S.ovr38count.biom \
+>summary_TS_lake_2000_min18S.ovr38count.txt
+biom summarize-table \
+-i OTU_table_TS_lake_2000_min18S.ovr38count.biom --qualitative \
+>summary_TS_lake_2000_min18S.ovr38count_qual.txt
+
+# cultures have sparcity ~70% while lake sample 30% will try network at this level
+# cultures esp lake 2 and pond are too low in richness (effective population) to analyse
+
+###############################
+## removing low abundance for community composition ##
+##  1% in at least one sample
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_lake1_cultures_2000.biom \
+-o OTU_table_anO2_lake1_cultures_2000.ovr20count.biom -n 20
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_lake2_cultures_2000.biom \
+-o OTU_table_anO2_lake2_cultures_2000.ovr20count.biom -n 20
+filter_otus_from_otu_table.py \
+-i OTU_table_anO2_pond_cultures_2000.biom \
+-o OTU_table_anO2_pond_cultures_2000.ovr20count.biom -n 20
+filter_otus_from_otu_table.py \
+-i OTU_table_TS_lake_2000.biom \
+-o OTU_table_TS_lake_2000.ovr20count.biom -n 20
+
+biom summarize-table \
+-i OTU_table_anO2_lake1_cultures_2000.ovr20count.biom \
+>summary_anO2_lake1_cultures_2000.ovr20count.txt
+biom summarize-table \
+-i OTU_table_anO2_lake2_cultures_2000.ovr20count.biom \
+>summary_anO2_lake2_cultures_2000.ovr20count.txt
+biom summarize-table \
+-i OTU_table_anO2_pond_cultures_2000.ovr20count.biom \
+>summary_anO2_pond_cultures_2000.ovr20count.txt
+biom summarize-table \
+-i OTU_table_TS_lake_2000.ovr20count.biom \
+>summary_TS_lake_2000.ovr20count.txt
+#good enough to start with for graphing or processing in R for taxa summary
+
+## create tables that collect OTUs at increasing taxonomic levels for use in R
+summarize_taxa.py -i OTU_table_anO2_pond_cultures_2000.ovr20count.biom -o ../taxonomy_summary/MC_anO2_pond
+summarize_taxa.py -i OTU_table_TS_lake_2000.ovr20count.biom -o ../taxonomy_summary/TS_lake_2000
+summarize_taxa.py -i OTU_table_anO2_lake1_cultures_2000.ovr20count.biom -o ../taxonomy_summary/MC_anO2_lake1
+summarize_taxa.py -i OTU_table_anO2_lake2_cultures_2000.ovr20count.biom -o ../taxonomy_summary/MC_anO2_lake2
+
+## make human readable tables just in case needed later
+tn="TS_lake anO2_lake1_cultures anO2_lake2_cultures"
+## set up for loop to iterate over list "tn"
+for tmnt in $tn
+do
+  biom convert \
+  -i OTU_table_"$tmnt"_2000.ovr20count.biom \
+  -o OTU_table_"$tmnt"_2000.ovr20count.w_taxonomy.txt \
+  --to-tsv --header-key taxonomy
+done
+
+## convert filtrate biomes also
+biom convert -i OTU_table_filtrate_NTC.600.no_singletons.biom \
+-o OTU_table_filtrate_NTC.600.no_singletons.w_taxonomy.txt \
+--to-tsv --header-key taxonomy 
+```
