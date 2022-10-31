@@ -1,7 +1,7 @@
 ## install package
 #library(devtools)
-#install_github("zdk123/SpiecEasi", lib="/proj/snic2020-16-196/private/")
-library(SpiecEasi, lib.loc='/proj/snic2020-16-196/private/')
+#install_github("zdk123/SpiecEasi", lib="/path/to/proj/dir")
+library(SpiecEasi, lib.loc='/path/to/proj/dir/')
 library(phyloseq)
 library(igraph)
 
