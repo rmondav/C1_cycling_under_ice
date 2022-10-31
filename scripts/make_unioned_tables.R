@@ -1,6 +1,6 @@
 library(dplyr)
 ## make sample list
-tn <-c("TS_lake_2000","MC_anO2_lake1","MC_anO2_lake2")
+tn <-c("TS_lake_2000")
 ## set up for loop to iterate over list "tn"
 for (tmnt in tn) {
   ## make variables for the edge files
