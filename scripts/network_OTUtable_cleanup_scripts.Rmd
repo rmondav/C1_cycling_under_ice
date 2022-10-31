@@ -124,6 +124,7 @@ grep "Sjon" scripts/samplelists/sample_list.anO2_lake_cultures.txt \
 grep "Anaerobic" scripts/samplelists/sample_list.anO2_lake_cultures.txt \
 >scripts/samplelists/sample_list.anO2_lake1_cultures.txt
 
+## unused culture samples
 filter_samples_from_otu_table.py \
 -i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count_no_singletons.biom \
 -o processed_tables/OTU_table_anO2_lake1_cultures.biom \
@@ -136,6 +137,7 @@ filter_samples_from_otu_table.py \
 -i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count_no_singletons.biom \
 -o processed_tables/OTU_table_anO2_pond_cultures.biom \
 --sample_id_fp scripts/samplelists/sample_list.anO2_pond_cultures.txt
+## this table is the time-series!!
 filter_samples_from_otu_table.py \
 -i processed_tables/methanotrophy_OTU_table_wo_others.noNTC.ovr100count_no_singletons.biom \
 -o processed_tables/OTU_table_TS_lake.biom \
@@ -146,40 +148,14 @@ filter_samples_from_otu_table.py \
 ## remember to update git
 
 ```{bash}
-
 cd /proj/snic2020-16-196/nobackup/CHtrophy_network_nobackup/methanotrophy_networks/processed_tables
 interactive -n 1 -t 02:10:00 -A snic2020-5-529
 module load bioinfo-tools Qiime/1.9.1 git/2.28.0
 
 # summarise
-biom summarize-table -i OTU_table_anO2_lake1_cultures.biom >summary_anO2_lake1_cultures.txt #98
-biom summarize-table -i OTU_table_anO2_lake2_cultures.biom >summary_anO2_lake2_cultures.txt #79
-biom summarize-table -i OTU_table_anO2_pond_cultures.biom >summary_anO2_pond_cultures.txt #98
 biom summarize-table -i OTU_table_TS_lake.biom >summary_TS_lake.txt #35
 
-## subsample 600 counts NTC
-single_rarefaction.py \
--i methanotrophy_OTU_table_filtrate_NTC.biom -o OTU_table_filtrate_NTC.600.biom --depth 600
-biom summarize-table -i OTU_table_filtrate_NTC.600.biom >summary_NTC.600.txt
-biom summarize-table -i OTU_table_filtrate_NTC.600.biom --qualitative >summary_NTC.600.qual.txt
-filter_otus_from_otu_table.py \
--i OTU_table_filtrate_NTC.600.biom -o OTU_table_filtrate_NTC.600.no_singletons.biom -n 2
-biom summarize-table -i OTU_table_filtrate_NTC.600.no_singletons.biom >summary_NTC.600.ns.txt
-biom summarize-table -i OTU_table_filtrate_NTC.600.no_singletons.biom --qualitative >summary_NTC.600.ns.qual.txt
-
 ## subsample 2000 counts all others
-single_rarefaction.py \
--i OTU_table_anO2_lake1_cultures.biom -o OTU_table_anO2_lake1_cultures_2000.biom --depth 2000
-biom summarize-table -i OTU_table_anO2_lake1_cultures_2000.biom \
->summary_anO2_lake1_cultures_2000.txt #93 samples
-single_rarefaction.py \
--i OTU_table_anO2_lake2_cultures.biom -o OTU_table_anO2_lake2_cultures_2000.biom --depth 2000
-biom summarize-table -i OTU_table_anO2_lake2_cultures_2000.biom \
->summary_anO2_lake2_cultures_2000.txt #70 samples
-single_rarefaction.py \
--i OTU_table_anO2_pond_cultures.biom -o OTU_table_anO2_pond_cultures_2000.biom --depth 2000
-biom summarize-table -i OTU_table_anO2_pond_cultures_2000.biom \
->summary_anO2_pond_cultures_2000.txt #95 samples
 single_rarefaction.py \
 -i OTU_table_TS_lake.biom -o OTU_table_TS_lake_2000.biom --depth 2000
 biom summarize-table -i OTU_table_TS_lake_2000.biom \
@@ -197,46 +173,6 @@ could give sufficient co-occurance patterns for strong stats
 assemblages (lake) but not good option for anO2 cultures
 
 ## try combination of >10% of samples  and count (1% one sample + 1x10%) for anO2 cultures
-filter_otus_from_otu_table.py \
--i OTU_table_anO2_lake1_cultures_2000.biom \
--o OTU_table_anO2_lake1_cultures_2000_min9S.biom --min_samples 9
-filter_otus_from_otu_table.py \
--i OTU_table_anO2_lake1_cultures_2000_min9S.biom \
--o OTU_table_anO2_lake1_cultures_2000_min9S.ovr28count.biom -n 28
-biom summarize-table \
--i OTU_table_anO2_lake1_cultures_2000_min9S.ovr28count.biom \
->summary_anO2_lake1_cultures_2000_min9S.ovr28count.txt
-biom summarize-table \
--i OTU_table_anO2_lake1_cultures_2000_min9S.ovr28count.biom --qualitative \
->summary_anO2_lake1_cultures_2000_min9S.ovr28count_qual.txt
-
-# 2nd lake cultures
-filter_otus_from_otu_table.py \
--i OTU_table_anO2_lake2_cultures_2000.biom \
--o OTU_table_anO2_lake2_cultures_2000_min7S.biom --min_samples 7
-filter_otus_from_otu_table.py \
--i OTU_table_anO2_lake2_cultures_2000_min7S.biom \
--o OTU_table_anO2_lake2_cultures_2000_min7S.ovr26count.biom -n 26
-biom summarize-table \
--i OTU_table_anO2_lake2_cultures_2000_min7S.ovr26count.biom \
->summary_anO2_lake2_cultures_2000_min7S.ovr26count.txt
-biom summarize-table \
--i OTU_table_anO2_lake2_cultures_2000_min7S.ovr26count.biom --qualitative \
->summary_anO2_lake2_cultures_2000_min7S.ovr26count_qual.txt
-
-# pond
-filter_otus_from_otu_table.py \
--i OTU_table_anO2_pond_cultures_2000.biom \
--o OTU_table_anO2_pond_cultures_2000_min10S.biom --min_samples 10
-filter_otus_from_otu_table.py \
--i OTU_table_anO2_pond_cultures_2000_min10S.biom \
--o OTU_table_anO2_pond_cultures_2000_min10S.ovr29count.biom -n 29
-biom summarize-table \
--i OTU_table_anO2_pond_cultures_2000_min10S.ovr29count.biom \
->summary_anO2_pond_cultures_2000_min10S.ovr29count.txt
-biom summarize-table \
--i OTU_table_anO2_pond_cultures_2000_min10S.ovr29count.biom --qualitative \
->summary_anO2_pond_cultures_2000_min10S.ovr29count_qual.txt
 
 # and for lake TD-series
 filter_otus_from_otu_table.py \
@@ -259,40 +195,19 @@ biom summarize-table \
 ## removing low abundance for community composition ##
 ##  1% in at least one sample
 filter_otus_from_otu_table.py \
--i OTU_table_anO2_lake1_cultures_2000.biom \
--o OTU_table_anO2_lake1_cultures_2000.ovr20count.biom -n 20
-filter_otus_from_otu_table.py \
--i OTU_table_anO2_lake2_cultures_2000.biom \
--o OTU_table_anO2_lake2_cultures_2000.ovr20count.biom -n 20
-filter_otus_from_otu_table.py \
--i OTU_table_anO2_pond_cultures_2000.biom \
--o OTU_table_anO2_pond_cultures_2000.ovr20count.biom -n 20
-filter_otus_from_otu_table.py \
 -i OTU_table_TS_lake_2000.biom \
 -o OTU_table_TS_lake_2000.ovr20count.biom -n 20
 
-biom summarize-table \
--i OTU_table_anO2_lake1_cultures_2000.ovr20count.biom \
->summary_anO2_lake1_cultures_2000.ovr20count.txt
-biom summarize-table \
--i OTU_table_anO2_lake2_cultures_2000.ovr20count.biom \
->summary_anO2_lake2_cultures_2000.ovr20count.txt
-biom summarize-table \
--i OTU_table_anO2_pond_cultures_2000.ovr20count.biom \
->summary_anO2_pond_cultures_2000.ovr20count.txt
 biom summarize-table \
 -i OTU_table_TS_lake_2000.ovr20count.biom \
 >summary_TS_lake_2000.ovr20count.txt
 #good enough to start with for graphing or processing in R for taxa summary
 
 ## create tables that collect OTUs at increasing taxonomic levels for use in R
-summarize_taxa.py -i OTU_table_anO2_pond_cultures_2000.ovr20count.biom -o ../taxonomy_summary/MC_anO2_pond
 summarize_taxa.py -i OTU_table_TS_lake_2000.ovr20count.biom -o ../taxonomy_summary/TS_lake_2000
-summarize_taxa.py -i OTU_table_anO2_lake1_cultures_2000.ovr20count.biom -o ../taxonomy_summary/MC_anO2_lake1
-summarize_taxa.py -i OTU_table_anO2_lake2_cultures_2000.ovr20count.biom -o ../taxonomy_summary/MC_anO2_lake2
 
 ## make human readable tables just in case needed later
-tn="TS_lake anO2_lake1_cultures anO2_lake2_cultures"
+tn="TS_lake"
 ## set up for loop to iterate over list "tn"
 for tmnt in $tn
 do
@@ -301,9 +216,4 @@ do
   -o OTU_table_"$tmnt"_2000.ovr20count.w_taxonomy.txt \
   --to-tsv --header-key taxonomy
 done
-
-## convert filtrate biomes also
-biom convert -i OTU_table_filtrate_NTC.600.no_singletons.biom \
--o OTU_table_filtrate_NTC.600.no_singletons.w_taxonomy.txt \
---to-tsv --header-key taxonomy 
 ```
