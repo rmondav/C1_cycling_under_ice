@@ -4,10 +4,11 @@ scripts associated with the preprint manuscript:
 doi: 
 
 
+
 aim: use network analysis of microbial communities to identify C1 cycling consortia 
 
 
-
+#######################################
 scripts run in the following order:
 ### processing of data using biom and qiime
 1. network_OTUtable_cleanup_scripts.Rmd
@@ -18,6 +19,14 @@ scripts run in the following order:
 ### co-occurance analyses and taxon table clean-up
 3. sbatch_network_calculations.sh
 
+#######################################
+
+SI tables avaliable at
+https://doi.org/10.6084/m9.figshare.21388005
+and
+https://doi.org/10.6084/m9.figshare.21388026
+Amplicon sequence data available at
+https://www.ncbi.nlm.nih.gov/bioproject/489415 
 
 
 
