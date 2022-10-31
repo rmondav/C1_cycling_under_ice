@@ -6,7 +6,7 @@
 #SBATCH -p core -n 4
 
 module load bioinfo-tools R/4.0.4 R_packages/4.0.4
-maindir="/path/to/working/dir"
+maindir="/path/to/proj/dir/C1_networks"
 cd $maindir/processed_tables/
 Rscript --no-restore --no-save "$maindir/scripts/SPIEC-EASI.R" &&
 cd ..
