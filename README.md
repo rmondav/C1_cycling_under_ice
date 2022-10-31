@@ -25,11 +25,13 @@ SI tables avaliable at
 https://doi.org/10.6084/m9.figshare.21388005
 and
 https://doi.org/10.6084/m9.figshare.21388026
+
 Amplicon sequence data available at
 https://www.ncbi.nlm.nih.gov/bioproject/489415 
 
 
 
 [![DOI](https://zenodo.org/badge/366622350.svg)](https://zenodo.org/badge/latestdoi/366622350)
+
   
   ![](https://komarev.com/ghpvc/?username=rmondav&style=flat&color=20b2aa&label=counter)
