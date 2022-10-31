@@ -1,6 +1,6 @@
 library(Matrix); library(igraph)
 #library(SpiecEasi) #for local analyses
-library(SpiecEasi, lib.loc='/proj/snic2020-16-196/private/')
+library(SpiecEasi, lib.loc='/path/to/projdir/')
 
 ## make list for treatment names
 tn<-c("TS_lake_2000")
