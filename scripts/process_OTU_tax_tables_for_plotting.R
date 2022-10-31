@@ -1,6 +1,6 @@
 ## separate OTUtax tables and add in abundance info for network plotting
 ## make sample list
-tn <-c("TS_lake_2000","MC_anO2_lake1","MC_anO2_lake2")
+tn <-c("TS_lake_2000")
 ## set up for loop to iterate over list "tn"
 for (tmnt in tn) {
   #read in files
@@ -29,14 +29,6 @@ for (tmnt in tn) {
 ## read in full OTU table
 full_OTU<-read.csv("processed_tables/full_taxonomy_table.csv", header=T, row.names = 1)
 ## get list of OTUs in the clean OTU tables
-infile="processed_tables/MC_anO2_lake1_clean_otus.csv"
-clean_otus<-read.csv(file =infile, header=T, row.names=1) 
-names1<-rownames(clean_otus)
-
-infile="processed_tables/MC_anO2_lake2_clean_otus.csv"
-clean_otus<-read.csv(file =infile, header=T, row.names=1) 
-names2<-rownames(clean_otus)
-
 infile="processed_tables/TS_lake_2000_clean_otus.csv"
 clean_otus<-read.csv(file =infile, header=T, row.names=1) 
 names3<-rownames(clean_otus)
