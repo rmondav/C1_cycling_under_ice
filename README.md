@@ -1,26 +1,24 @@
-# methane_cycling_networks
+# C1_cycling_networks
 scripts associated with the preprint manuscript:
-"Biogenic methane cycling is controlled by microbial cohorts"
-doi: https://doi.org/10.1101/2022.01.24.477581
+"Network analysis uncovers associations in the turnover of C1 molecules in a winter lake"
+doi: 
 
 
-aim: use environmental and mixed-culture microbial communities correlated to CH4 flux
-to identify previously un-identified members of CH4 cycling consortia
+aim: use network analysis of microbial communities to identify C1 cycling consortia 
 
 
 
 scripts run in the following order:
-### pre-processing using mothur
-1. <contributor Gaetan>
+### processing of data using biom and qiime
+1. network_OTUtable_cleanup_scripts.Rmd
 
-### further processing using biom and qiime
-2. network_OTUtable_cleanup_scripts.Rmd
+### plotting graphs
+2. Sarahi.L.Garcia_column_graphs.R
 
 ### co-occurance analyses and taxon table clean-up
 3. sbatch_network_calculations.sh
 
-### plotting graphs
-4. Sarahi.L.Garcia_column_graphs.R
+
 
 
 [![DOI](https://zenodo.org/badge/366622350.svg)](https://zenodo.org/badge/latestdoi/366622350)
