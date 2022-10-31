@@ -31,7 +31,7 @@ https://www.ncbi.nlm.nih.gov/bioproject/489415
 
 
 
-[![DOI](https://zenodo.org/badge/366622350.svg)](https://zenodo.org/badge/latestdoi/366622350)
+[![DOI](https://zenodo.org/badge/559963330.svg)](https://zenodo.org/badge/latestdoi/559963330)
 
   
   ![](https://komarev.com/ghpvc/?username=rmondav&style=flat&color=20b2aa&label=counter)
