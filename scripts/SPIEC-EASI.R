@@ -6,12 +6,6 @@ library(phyloseq)
 library(igraph)
 
 ## read in biom files and parse taxonomy information
-MC_anO2_lake1_clean_psob<-import_biom(
-  "./OTU_table_anO2_lake1_cultures_2000_min9S.ovr28count.biom", 
-  parseFunction=parse_taxonomy_default)
-MC_anO2_lake2_clean_psob<-import_biom(
-  "OTU_table_anO2_lake2_cultures_2000_min7S.ovr26count.biom",
-  parseFunction=parse_taxonomy_default)
 TS_lake_2000_clean_psob<-import_biom(
   "OTU_table_TS_lake_2000_min18S.ovr38count.biom",
   parseFunction=parse_taxonomy_default)
@@ -19,7 +13,7 @@ TS_lake_2000_clean_psob<-import_biom(
 ## set spieceasi processing parameters and add seed for reproducibility
 paramargs <- list(rep.num=1000, seed=261, ncores=4)
 
-tn = list("MC_anO2_lake1","TS_lake_2000","MC_anO2_lake2")
+tn = list("TS_lake_2000")
 
 ## set up for loop to iterate over list "tn"
 for (tmnt in tn) {
