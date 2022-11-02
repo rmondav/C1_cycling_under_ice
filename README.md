@@ -1,7 +1,7 @@
 # C1_cycling_networks
 scripts associated with the preprint manuscript:
 "Network analysis uncovers associations in the turnover of C1 molecules in a winter lake"
-doi: 
+ https://biorxiv.org/cgi/content/short/2022.10.31.514531v1
 
 
 
